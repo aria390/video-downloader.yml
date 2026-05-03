@@ -33,6 +33,7 @@ jobs:
           EXT: ${{ github.event.inputs.file_ext }}
         run: |
           mkdir -p downloads
+          cd downloads
           
           case "$QUALITY" in
             1080p) FORMAT="bestvideo[height<=1080]+bestaudio/best[height<=1080]" ;;
@@ -49,5 +50,4 @@ jobs:
               --geo-bypass \
               --external-downloader aria2c \
               --external-downloader-args "-x 16 -s 16 -k 1M" \
-              -o "downloads/%(title)s.%(ext)s" \
-      
+              -o "%(title)s.%(ex
