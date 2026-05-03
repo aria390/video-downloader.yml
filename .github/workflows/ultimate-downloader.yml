@@ -53,18 +53,24 @@ jobs:
           VIDEO_QUALITY: ${{ github.event.inputs.quality }}
           FILE_FORMAT: ${{ github.event.inputs.file_ext }}
         run: |
+          set -e
           mkdir -p downloads
           cd downloads
           
-          if [ "$VIDEO_QUALITY" = "1080p" ]; then
-            FMT="bestvideo[height<=1080]+bestaudio/best[height<=1080]"
-          elif [ "$VIDEO_QUALITY" = "720p" ]; then
-            FMT="bestvideo[height<=720]+bestaudio/best[height<=720]"
-          elif [ "$VIDEO_QUALITY" = "480p" ]; then
-            FMT="bestvideo[height<=480]+bestaudio/best[height<=480]"
-          else
-            FMT="bestvideo+bestaudio/best"
-          fi
+          case "$VIDEO_QUALITY" in
+            "1080p")
+              FORMAT_SPEC="bestvideo[height<=1080]+bestaudio/best[height<=1080]"
+              ;;
+            "720p")
+              FORMAT_SPEC="bestvideo[height<=720]+bestaudio/best[height<=720]"
+              ;;
+            "480p")
+              FORMAT_SPEC="bestvideo[height<=480]+bestaudio/best[height<=480]"
+              ;;
+            *)
+              FORMAT_SPEC="bestvideo+bestaudio/best"
+              ;;
+          esac
           
           if [ "$DOWNLOAD_MODE" = "audio_only" ]; then
-            yt-dlp -x --audio-format "$FILE_FORMAT" --restrict-filenames --no-playlist -o "%(title)s.
+            yt-dlp -x --audio-
