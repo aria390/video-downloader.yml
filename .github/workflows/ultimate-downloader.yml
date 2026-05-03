@@ -47,6 +47,13 @@ jobs:
     timeout-minutes: 300
     permissions:
       contents: write
+    
+    env:
+      DL_URL: ${{ inputs.url }}
+      DL_MODE: ${{ inputs.mode }}
+      DL_QUALITY: ${{ inputs.quality }}
+      DL_EXT: ${{ inputs.file_ext }}
+      DL_SPLIT: ${{ inputs.split_size }}
 
     steps:
       - name: Checkout Repository
@@ -67,21 +74,12 @@ jobs:
         run: |
           mkdir -p downloads
           cd downloads
-          
-          URL='${{ inputs.url }}'
-          MODE='${{ inputs.mode }}'
-          QUALITY='${{ inputs.quality }}'
-          EXT='${{ inputs.file_ext }}'
-          
-          echo "Starting download..."
-          echo "URL: $URL"
-          echo "Mode: $MODE"
-          echo "Quality: $QUALITY"
-          echo "Format: $EXT"
-          
-          if [ "$MODE" = "audio_only" ]; then
-            yt-dlp -x --audio-format "$EXT" --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" "$URL"
+          echo "URL: $DL_URL"
+          echo "Mode: $DL_MODE"
+          echo "Quality: $DL_QUALITY"
+          echo "Format: $DL_EXT"
+          if [ "$DL_MODE" = "audio_only" ]; then
+            yt-dlp -x --audio-format "$DL_EXT" --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" -- "$DL_URL"
           else
-            case "$QUALITY" in
-              1080p)
-       
+            if [ "$DL_QUALITY" = "1080p" ]; then
+          
