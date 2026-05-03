@@ -67,7 +67,7 @@ jobs:
         run: |
           mkdir -p downloads
           cd downloads
-          yt-dlp --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" "${{ inputs.url }}"
+          yt-dlp --cookies-from-browser chrome --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" "${{ inputs.url }}"
 
       - name: Process Large Files
         run: |
@@ -80,4 +80,4 @@ jobs:
               if [ $size_mb -gt 1800 ]; then
                 echo "File too large, removing..."
                 rm "$file"
-              elif [ $size_mb -gt ${{ inputs.split_size }} ]; the
+              elif [ $size_mb -gt $
