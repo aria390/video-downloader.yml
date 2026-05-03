@@ -64,19 +64,20 @@ jobs:
           pip install -U yt-dlp
 
       - name: Download Content
-        env:
-          VIDEO_URL: ${{ inputs.url }}
-          DOWNLOAD_MODE: ${{ inputs.mode }}
-          VIDEO_QUALITY: ${{ inputs.quality }}
-          FILE_FORMAT: ${{ inputs.file_ext }}
         run: |
           mkdir -p downloads
           cd downloads
-          
-          if [ "$DOWNLOAD_MODE" = "audio_only" ]; then
-            yt-dlp -x --audio-format "$FILE_FORMAT" --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" "$VIDEO_URL"
-            exit 0
-          fi
-          
-          if [ "$VIDEO_QUALITY" = "1080p" ]; then
-            yt-dlp -f "bestvideo[height<=1080]+bestaudio/best[height<=1080]" --merge-output-format "$
+          yt-dlp --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" "${{ inputs.url }}"
+
+      - name: Process Large Files
+        run: |
+          cd downloads
+          for file in *; do
+            if [ -f "$file" ]; then
+              size_bytes=$(stat -c%s "$file")
+              size_mb=$((size_bytes / 1024 / 1024))
+              echo "File: $file - Size: ${size_mb}MB"
+              if [ $size_mb -gt 1800 ]; then
+                echo "File too large, removing..."
+                rm "$file"
+              elif [ $size_mb -gt ${{ inputs.split_size }} ]; the
