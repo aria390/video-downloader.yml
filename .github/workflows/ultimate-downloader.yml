@@ -50,15 +50,12 @@ jobs:
         run: |
           mkdir -p downloads
           cd downloads
-          
           URL="${{ github.event.inputs.url }}"
           MODE="${{ github.event.inputs.mode }}"
           QUALITY="${{ github.event.inputs.quality }}"
           EXT="${{ github.event.inputs.file_ext }}"
-          
           echo "URL: $URL"
           echo "Mode: $MODE | Quality: $QUALITY | Format: $EXT"
-          
           if [ "$QUALITY" = "1080p" ]; then
             FORMAT="bestvideo[height<=1080]+bestaudio/best[height<=1080]"
           elif [ "$QUALITY" = "720p" ]; then
@@ -68,6 +65,5 @@ jobs:
           else
             FORMAT="bestvideo+bestaudio/best"
           fi
-
           if [ "$MODE" = "audio_only" ]; then
-            yt-dlp -x --audio-format "$EXT" -
+            yt-dlp -x --audio-format "$EXT" --restrict-filenames --no-playlist 
