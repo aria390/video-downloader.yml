@@ -3,54 +3,25 @@ name: 🎬 Pro Video/Audio Downloader
 on:
   workflow_dispatch:
     inputs:
-      url:
-        description: 'Video URL'
-        required: true
-      mode:
-        description: 'Download Mode'
-        required: true
-        default: 'video'
-        type: choice
-        options:
-          - video
-          - audio_only
-      quality:
-        description: 'Select Quality'
-        required: true
-        default: 'best'
-        type: choice
-        options:
-          - best
-          - 1080p
-          - 720p
-          - 480p
-      file_ext:
-        description: 'File Extension'
-        required: true
-        default: 'mp4'
-        type: choice
-        options:
-          - mp4
-          - mkv
-          - mp3
-          - m4a
-      split_size:
-        description: 'Split files larger than (MB)'
-        required: false
-        default: '90'
+      url: { description: 'Video URL', required: true }
+      mode: { description: 'Mode', required: true, default: 'video', type: choice, options: [video, audio_only] }
+      quality: { description: 'Quality', required: true, default: 'best', type: choice, options: [best, 1080p, 720p, 480p] }
+      file_ext: { description: 'Extension', required: true, default: 'mp4', type: choice, options: [mp4, mkv, mp3, m4a] }
+      split_size: { description: 'Split Size (MB)', required: false, default: '90' }
 
 jobs:
   download:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    timeout-minutes: 300
+    permissions: { contents: write }
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Install Tools
         run: |
-          sudo apt-get update
+          sudo apt-get update -qq
           sudo apt-get install -y ffmpeg aria2 zip
           python3 -m pip install -U yt-dlp
 
@@ -63,16 +34,20 @@ jobs:
         run: |
           mkdir -p downloads
           
-          # تنظیم کیفیت
-          if [ "$QUALITY" == "1080p" ]; then
-            FORMAT="bestvideo[height<=1080]+bestaudio/best[height<=1080]"
-          elif [ "$QUALITY" == "720p" ]; then
-            FORMAT="bestvideo[height<=720]+bestaudio/best[height<=720]"
-          elif [ "$QUALITY" == "480p" ]; then
-            FORMAT="bestvideo[height<=480]+bestaudio/best[height<=480]"
-          else
-            FORMAT="best"
-          fi
+          case "$QUALITY" in
+            1080p) FORMAT="bestvideo[height<=1080]+bestaudio/best[height<=1080]" ;;
+            720p)  FORMAT="bestvideo[height<=720]+bestaudio/best[height<=720]" ;;
+            480p)  FORMAT="bestvideo[height<=480]+bestaudio/best[height<=480]" ;;
+            *)     FORMAT="best" ;;
+          esac
 
-          # اجرای هوشمند دانلود
-          if [ "$MODE" == "audio_only" ] || [ "$EXT" == "mp
+          if [ "$MODE" == "audio_only" ] || [ "$EXT" == "mp3" ] || [ "$EXT" == "m4a" ]; then
+            yt-dlp -x --audio-format "$EXT" \
+              --restrict-filenames \
+              --no-playlist \
+              --no-check-certificate \
+              --geo-bypass \
+              --external-downloader aria2c \
+              --external-downloader-args "-x 16 -s 16 -k 1M" \
+              -o "downloads/%(title)s.%(ext)s" \
+      
