@@ -1,20 +1,20 @@
-name: Video Downloader
+name: Ultimate Video Downloader
 
 on:
   workflow_dispatch:
     inputs:
       url:
-        description: 'Video URL'
+        description: 'Video URL (YouTube, Instagram, etc.)'
         required: true
 
 jobs:
-  build:
+  download:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Install Python & yt-dlp
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -24,18 +24,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install yt-dlp
 
-      - name: Download Video
+      - name: Download Process
         run: |
           mkdir -p downloads
-          yt-dlp -f "best" \
+          # استفاده از آرگومان‌های پیشرفته برای دور زدن محدودیت‌ها
+          yt-dlp \
           --no-check-certificate \
           --geo-bypass \
+          --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+          --add-header "Accept-Language: en-US,en;q=0.9" \
+          --no-playlist \
+          -f "best" \
           -o "downloads/%(title)s.%(ext)s" \
           "${{ github.event.inputs.url }}"
 
-      - name: Upload Artifact
+      - name: List Files (Debug)
+        if: always()
+        run: ls -lh downloads/
+
+      - name: Upload to GitHub
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: video-output
+          name: my-video
           path: downloads/
+          retention-days: 1
