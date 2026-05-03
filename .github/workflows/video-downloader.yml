@@ -45,7 +45,6 @@ jobs:
 
       - name: Download Video
         run: |
-          # ایجاد پوشه و یک فایل تست برای جلوگیری از خطای Path
           mkdir -p downloads
           touch downloads/log.txt
           
@@ -65,5 +64,8 @@ jobs:
             fi
           fi
 
-      - name: Check if file exists
-   
+      - name: List Files
+        run: ls -R downloads/
+
+      - name: Upload Artifact
+        uses: a
