@@ -43,27 +43,28 @@ jobs:
       - name: Install Tools
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg aria2 zip
+          sudo apt-get install -y ffmpeg zip
           python3 -m pip install -U yt-dlp
 
       - name: Execute Download
+        env:
+          VIDEO_URL: ${{ github.event.inputs.url }}
+          DOWNLOAD_MODE: ${{ github.event.inputs.mode }}
+          VIDEO_QUALITY: ${{ github.event.inputs.quality }}
+          FILE_FORMAT: ${{ github.event.inputs.file_ext }}
         run: |
           mkdir -p downloads
           cd downloads
-          URL="${{ github.event.inputs.url }}"
-          MODE="${{ github.event.inputs.mode }}"
-          QUALITY="${{ github.event.inputs.quality }}"
-          EXT="${{ github.event.inputs.file_ext }}"
-          echo "URL: $URL"
-          echo "Mode: $MODE | Quality: $QUALITY | Format: $EXT"
-          if [ "$QUALITY" = "1080p" ]; then
-            FORMAT="bestvideo[height<=1080]+bestaudio/best[height<=1080]"
-          elif [ "$QUALITY" = "720p" ]; then
-            FORMAT="bestvideo[height<=720]+bestaudio/best[height<=720]"
-          elif [ "$QUALITY" = "480p" ]; then
-            FORMAT="bestvideo[height<=480]+bestaudio/best[height<=480]"
+          
+          if [ "$VIDEO_QUALITY" = "1080p" ]; then
+            FMT="bestvideo[height<=1080]+bestaudio/best[height<=1080]"
+          elif [ "$VIDEO_QUALITY" = "720p" ]; then
+            FMT="bestvideo[height<=720]+bestaudio/best[height<=720]"
+          elif [ "$VIDEO_QUALITY" = "480p" ]; then
+            FMT="bestvideo[height<=480]+bestaudio/best[height<=480]"
           else
-            FORMAT="bestvideo+bestaudio/best"
+            FMT="bestvideo+bestaudio/best"
           fi
-          if [ "$MODE" = "audio_only" ]; then
-            yt-dlp -x --audio-format "$EXT" --restrict-filenames --no-playlist 
+          
+          if [ "$DOWNLOAD_MODE" = "audio_only" ]; then
+            yt-dlp -x --audio-format "$FILE_FORMAT" --restrict-filenames --no-playlist -o "%(title)s.
