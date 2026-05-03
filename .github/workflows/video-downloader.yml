@@ -14,25 +14,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install yt-dlp
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Tools
         run: |
-          sudo python3 -m pip install --upgrade pip
-          sudo pip install yt-dlp
+          python -m pip install --upgrade pip
+          pip install yt-dlp
 
       - name: Download Video
-        shell: bash
         run: |
           mkdir -p downloads
-          # استفاده از ساده‌ترین دستور ممکن برای جلوگیری از تداخل فرمت‌ها
           yt-dlp -f "best" \
           --no-check-certificate \
           --geo-bypass \
           -o "downloads/%(title)s.%(ext)s" \
           "${{ github.event.inputs.url }}"
-
-      - name: Check Folder Content
-        if: always()
-        run: ls -R downloads/
 
       - name: Upload Artifact
         if: always()
@@ -40,4 +39,3 @@ jobs:
         with:
           name: video-output
           path: downloads/
-          if-no-files-found: warn
