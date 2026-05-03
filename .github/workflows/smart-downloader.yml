@@ -1,0 +1,68 @@
+name: 🚀 Smart Video Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Video URL (YouTube, Twitter, etc.)'
+        required: true
+      split_size:
+        description: 'Split files larger than this (MB)'
+        required: false
+        default: '90'
+
+jobs:
+  download-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2 zip
+          pip install yt-dlp
+
+      - name: Download Video
+        run: |
+          mkdir -p downloads
+          # استفاده از yt-dlp برای دانلود با بهترین کیفیت
+          yt-dlp \
+          --no-check-certificate \
+          --geo-bypass \
+          -f "best" \
+          -o "downloads/%(title)s.%(ext)s" \
+          "${{ github.event.inputs.url }}"
+
+      - name: Process and Split Large Files
+        run: |
+          SPLIT_MB=${{ github.event.inputs.split_size }}
+          cd downloads
+          for FILE in *; do
+            [ -f "$FILE" ] || continue
+            SIZE_MB=$(($(stat -c%s "$FILE") / 1024 / 1024))
+            
+            if [ "$SIZE_MB" -gt "$SPLIT_MB" ]; then
+              echo "✂️ Splitting $FILE ($SIZE_MB MB)..."
+              zip -0 -s "${SPLIT_MB}m" "${FILE}.zip" "$FILE"
+              rm "$FILE" # حذف فایل اصلی برای جلوگیری از خطا در Push
+            fi
+          done
+
+      - name: Commit and Push to GitHub
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add downloads/
+          
+          # فقط اگر تغییری وجود داشت Commit کن
+          if git diff --staged --quiet; then
+            echo "No files to upload."
+          else
+            git commit -m "Add downloaded video (Auto-split if large) [skip ci]"
+            git pull --rebase origin main
+            git push origin main
+          fi
