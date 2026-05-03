@@ -47,13 +47,6 @@ jobs:
     timeout-minutes: 300
     permissions:
       contents: write
-    
-    env:
-      DL_URL: ${{ inputs.url }}
-      DL_MODE: ${{ inputs.mode }}
-      DL_QUALITY: ${{ inputs.quality }}
-      DL_EXT: ${{ inputs.file_ext }}
-      DL_SPLIT: ${{ inputs.split_size }}
 
     steps:
       - name: Checkout Repository
@@ -71,15 +64,19 @@ jobs:
           pip install -U yt-dlp
 
       - name: Download Content
+        env:
+          VIDEO_URL: ${{ inputs.url }}
+          DOWNLOAD_MODE: ${{ inputs.mode }}
+          VIDEO_QUALITY: ${{ inputs.quality }}
+          FILE_FORMAT: ${{ inputs.file_ext }}
         run: |
           mkdir -p downloads
           cd downloads
-          echo "URL: $DL_URL"
-          echo "Mode: $DL_MODE"
-          echo "Quality: $DL_QUALITY"
-          echo "Format: $DL_EXT"
-          if [ "$DL_MODE" = "audio_only" ]; then
-            yt-dlp -x --audio-format "$DL_EXT" --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" -- "$DL_URL"
-          else
-            if [ "$DL_QUALITY" = "1080p" ]; then
           
+          if [ "$DOWNLOAD_MODE" = "audio_only" ]; then
+            yt-dlp -x --audio-format "$FILE_FORMAT" --restrict-filenames --no-playlist -o "%(title)s.%(ext)s" "$VIDEO_URL"
+            exit 0
+          fi
+          
+          if [ "$VIDEO_QUALITY" = "1080p" ]; then
+            yt-dlp -f "bestvideo[height<=1080]+bestaudio/best[height<=1080]" --merge-output-format "$
