@@ -35,19 +35,18 @@ jobs:
           mkdir -p downloads
           cd downloads
           
+          echo "🔗 URL: $VIDEO_URL"
+          echo "📊 Mode: $MODE | Quality: $QUALITY | Format: $EXT"
+          
           case "$QUALITY" in
-            1080p) FORMAT="bestvideo[height<=1080]+bestaudio/best[height<=1080]" ;;
-            720p)  FORMAT="bestvideo[height<=720]+bestaudio/best[height<=720]" ;;
-            480p)  FORMAT="bestvideo[height<=480]+bestaudio/best[height<=480]" ;;
-            *)     FORMAT="best" ;;
+            1080p) FORMAT="bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080]" ;;
+            720p)  FORMAT="bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720]" ;;
+            480p)  FORMAT="bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480]" ;;
+            *)     FORMAT="bestvideo[ext=mp4]+bestaudio[ext=m4a]/best" ;;
           esac
 
           if [ "$MODE" == "audio_only" ] || [ "$EXT" == "mp3" ] || [ "$EXT" == "m4a" ]; then
             yt-dlp -x --audio-format "$EXT" \
               --restrict-filenames \
               --no-playlist \
-              --no-check-certificate \
-              --geo-bypass \
-              --external-downloader aria2c \
-              --external-downloader-args "-x 16 -s 16 -k 1M" \
-              -o "%(title)s.%(ex
+  
