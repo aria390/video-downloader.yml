@@ -45,24 +45,25 @@ jobs:
 
       - name: Download Video
         run: |
-          # ایجاد پوشه دانلود در صورتی که وجود نداشته باشد
+          # ایجاد پوشه و یک فایل تست برای جلوگیری از خطای Path
           mkdir -p downloads
+          touch downloads/log.txt
           
           QUALITY="${{ github.event.inputs.quality }}"
           FORMAT="${{ github.event.inputs.file_extension }}"
           URL="${{ github.event.inputs.url }}"
 
+          echo "Starting download for: $URL"
+
           if [ "$FORMAT" == "mp3" ]; then
-            yt-dlp -x --audio-format mp3 "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate
+            yt-dlp -x --audio-format mp3 "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate --geo-bypass
           else
             if [ "$QUALITY" == "best" ]; then
-              yt-dlp -f "bestvideo+bestaudio/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate
+              yt-dlp -f "bestvideo+bestaudio/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate --geo-bypass
             else
-              yt-dlp -f "bestvideo[height<=$QUALITY]+bestaudio/best[height<=$QUALITY]/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate
+              yt-dlp -f "bestvideo[height<=$QUALITY]+bestaudio/best[height<=$QUALITY]/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate --geo-bypass
             fi
           fi
 
-      - name: Upload Artifact
-        if: always() # حتی اگر مراحل قبل خطا داشت، سعی کن اگر فایلی هست آپلود کنی
-        uses: actions/upload-artifact@v4
-        
+      - name: Check if file exists
+   
