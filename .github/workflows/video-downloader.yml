@@ -45,25 +45,24 @@ jobs:
 
       - name: Download Video
         run: |
+          # ایجاد پوشه دانلود در صورتی که وجود نداشته باشد
+          mkdir -p downloads
+          
           QUALITY="${{ github.event.inputs.quality }}"
           FORMAT="${{ github.event.inputs.file_extension }}"
           URL="${{ github.event.inputs.url }}"
 
           if [ "$FORMAT" == "mp3" ]; then
-            # Extract Audio Only
-            yt-dlp -x --audio-format mp3 "$URL" -o "downloads/%(title)s.%(ext)s"
+            yt-dlp -x --audio-format mp3 "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate
           else
-            # Download Video with specific quality
             if [ "$QUALITY" == "best" ]; then
-              yt-dlp -f "bestvideo+bestaudio/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s"
+              yt-dlp -f "bestvideo+bestaudio/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate
             else
-              yt-dlp -f "bestvideo[height<=$QUALITY]+bestaudio/best[height<=$QUALITY]/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s"
+              yt-dlp -f "bestvideo[height<=$QUALITY]+bestaudio/best[height<=$QUALITY]/best" --merge-output-format "$FORMAT" "$URL" -o "downloads/%(title)s.%(ext)s" --no-check-certificate
             fi
           fi
 
       - name: Upload Artifact
+        if: always() # حتی اگر مراحل قبل خطا داشت، سعی کن اگر فایلی هست آپلود کنی
         uses: actions/upload-artifact@v4
-        with:
-          name: downloaded-video
-          path: downloads/
-          retention-days: 1
+        
