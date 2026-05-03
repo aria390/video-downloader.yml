@@ -7,10 +7,10 @@ on:
         description: 'Video URL'
         required: true
       quality:
-        description: 'Quality (e.g. 1080, 720)'
+        description: 'Max Quality (e.g. 1080, 720)'
         default: '1080'
       extension:
-        description: 'Extension (mp4, mp3)'
+        description: 'Extension (mp4, mkv, mp3)'
         default: 'mp4'
 
 jobs:
@@ -24,21 +24,24 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
+          python3 -m pip install --upgrade pip
           pip install yt-dlp
 
       - name: Download
         run: |
           mkdir -p downloads
-          # دستور زیر با تنظیمات بهینه برای گیت‌هاب است
-          yt-dlp -f "bestvideo[height<=${{ github.event.inputs.quality }}]+bestaudio/best" \
+          # استفاده از فرمت هوشمند: اگر کیفیت انتخابی نبود، بهترین کیفیت بعدی را بگیر
+          yt-dlp -f "bestvideo[height<=${{ github.event.inputs.quality }}]+bestaudio/best[height<=${{ github.event.inputs.quality }}]/best" \
           --merge-output-format ${{ github.event.inputs.extension }} \
           --no-check-certificate \
           --geo-bypass \
+          --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36" \
           -o "downloads/%(title)s.%(ext)s" \
           "${{ github.event.inputs.url }}"
 
       - name: Upload
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: video-file
+          name: downloaded-content
           path: downloads/
